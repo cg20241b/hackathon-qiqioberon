@@ -55,9 +55,102 @@ const ThreeScene = () => {
                 bevelSegments: 5,
             });
 
-            // Material untuk teks
-            const letterMaterial = new THREE.MeshStandardMaterial({ color: 0x82b2fd }); // Biru muda dari tugas 1
-            const digitMaterial = new THREE.MeshStandardMaterial({ color: 0xFDCD82 }); // Oranye (contoh)
+            // // Material untuk teks
+            // const letterMaterial = new THREE.MeshStandardMaterial({ color: 0x82b2fd }); // Biru muda dari tugas 1
+            // const digitMaterial = new THREE.MeshStandardMaterial({ color: 0xFDCD82 }); // Oranye (contoh)
+
+            const letterMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    ambientIntensity: { value: 0.358 }, // Ambient Intensity (nrp = 158) + 200 = 358
+                    lightPosition: { value: new THREE.Vector3(0, 0, 0) }, // Cube's position
+                    viewPosition: { value: new THREE.Vector3() },
+                    baseColor: { value: new THREE.Color('#82b2fd') }, // Alphabet Base Color
+                },
+                vertexShader: `
+                    varying vec3 vNormal;
+                    varying vec3 vPosition;
+                    void main() {
+                        vNormal = normalize(normalMatrix * normal);
+                        vPosition = vec3(modelMatrix * vec4(position, 1.0));
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    uniform vec3 baseColor;
+                    uniform float ambientIntensity;
+                    uniform vec3 lightPosition;
+                    uniform vec3 viewPosition;
+            
+                    varying vec3 vNormal;
+                    varying vec3 vPosition;
+            
+                    void main() {
+                        // Ambient
+                        vec3 ambient = baseColor * ambientIntensity;
+            
+                        // Diffuse
+                        vec3 lightDir = normalize(lightPosition - vPosition);
+                        float diff = max(dot(vNormal, lightDir), 0.0);
+                        vec3 diffuse = baseColor * diff;
+            
+                        // Specular (Plastic)
+                        vec3 viewDir = normalize(viewPosition - vPosition);
+                        vec3 halfwayDir = normalize(lightDir + viewDir);
+                        float spec = pow(max(dot(vNormal, halfwayDir), 0.0), 32.0); // Moderate shininess
+                        vec3 specular = vec3(0.8) * spec; // Light grey specular
+            
+                        gl_FragColor = vec4(ambient + diffuse + specular, 1.0);
+                    }
+                `,
+            });
+
+
+            const digitMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    ambientIntensity: { value: 0.358 }, // Ambient Intensity (nrp = 158) + 200 = 358
+                    lightPosition: { value: new THREE.Vector3(0, 0, 0) }, // Cube's position
+                    viewPosition: { value: new THREE.Vector3() },
+                    baseColor: { value: new THREE.Color('#FDCD82') }, // Digit Base Color
+                },
+                vertexShader: `
+                    varying vec3 vNormal;
+                    varying vec3 vPosition;
+                    void main() {
+                        vNormal = normalize(normalMatrix * normal);
+                        vPosition = vec3(modelMatrix * vec4(position, 1.0));
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    uniform vec3 baseColor;
+                    uniform float ambientIntensity;
+                    uniform vec3 lightPosition;
+                    uniform vec3 viewPosition;
+            
+                    varying vec3 vNormal;
+                    varying vec3 vPosition;
+            
+                    void main() {
+                        // Ambient
+                        vec3 ambient = baseColor * ambientIntensity;
+            
+                        // Diffuse
+                        vec3 lightDir = normalize(lightPosition - vPosition);
+                        float diff = max(dot(vNormal, lightDir), 0.0);
+                        vec3 diffuse = baseColor * diff;
+            
+                        // Specular (Metallic)
+                        vec3 viewDir = normalize(viewPosition - vPosition);
+                        vec3 reflectDir = reflect(-lightDir, vNormal);
+                        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64.0); // Higher shininess
+                        vec3 specular = baseColor * spec; // Specular reflects base color
+            
+                        gl_FragColor = vec4(ambient + diffuse + specular, 1.0);
+                    }
+                `,
+            });
+
+
 
             // Mesh untuk huruf dan digit
             const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
