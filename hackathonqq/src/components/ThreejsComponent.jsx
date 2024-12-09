@@ -7,10 +7,11 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 const ThreeScene = () => {
     const mountRef = useRef(null);
 
+
     useEffect(() => {
         // Inisialisasi scene, kamera, dan renderer
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
 
         // Atur ukuran renderer
@@ -216,6 +217,35 @@ const ThreeScene = () => {
             requestAnimationFrame(animate);
         };
         animate();
+
+        // bisa dianimasi dengan mouse juga :D
+        // Variables for movement
+        const moveSpeed = 0.2; // Speed of movement for the cube
+        const cameraSpeed = 0.5; // Speed of movement for the camera
+
+        // Add keydown event listener
+        window.addEventListener("keydown", (event) => {
+            switch (event.key) {
+                case "w": // Move cube upward
+                case "W":
+                    cubeMesh.position.y += moveSpeed;
+                    break;
+                case "s": // Move cube downward
+                case "S":
+                    cubeMesh.position.y -= moveSpeed;
+                    break;
+                case "a": // Move camera left
+                case "A":
+                    camera.position.x -= cameraSpeed;
+                    break;
+                case "d": // Move camera right
+                case "D":
+                    camera.position.x += cameraSpeed;
+                    break;
+            }
+        });
+
+
 
         // Cleanup saat komponen di-unmount
         return () => {
